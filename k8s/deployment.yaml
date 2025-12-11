@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grandshield
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grandshield
+  template:
+    metadata:
+      labels:
+        app: grandshield
+    spec:
+      serviceAccountName: grandshield-sa  # Uses the IAM role created above
+      containers:
+      - name: backend
+        image: <YOUR_ECR_REPO_URL>:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+          - name: ENV
+            value: "prod"
+          - name: AWS_REGION
+            value: "eu-north-1"
+          # Secrets should ideally be injected via K8s Secrets or External Secrets Operator
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: "0.5"
+            memory: "512Mi"
+          limits:
+            cpu: "1.0"
+            memory: "1Gi"
+            memory: "1Gi"

@@ -1,0 +1,39 @@
+[project]
+name = "grandshield-backend"
+version = "0.1.0"
+description = "Backend for GrandShield application"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "websockets",
+    "deepgram-sdk",
+    "google-generativeai",
+    "boto3",
+    "structlog",
+    "python-dotenv",
+    "pydantic-settings",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["k8s*"]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pytest",
+    "httpx"
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["B008"]
