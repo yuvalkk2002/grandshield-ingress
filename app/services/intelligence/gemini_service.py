@@ -2,6 +2,7 @@ import asyncio
 import json
 
 import google.generativeai as genai
+
 from app.config import settings
 from app.core.exceptions import ConfigurationError, ExternalServiceError
 from app.core.logger import logger
@@ -9,6 +10,7 @@ from app.core.logger import logger
 from .base import IntelligenceAnalyzer
 from .models import AnalysisResult, AnalyzedAction, RiskLevel
 
+# TODO - rewrite with pydanticAI and agnostic model-prompt pair.
 
 class GeminiScamAnalyzer(IntelligenceAnalyzer):
     """
@@ -22,7 +24,7 @@ class GeminiScamAnalyzer(IntelligenceAnalyzer):
 
         try:
             genai.configure(api_key=settings.GOOGLE_API_KEY)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
             self.chat = self.model.start_chat(history=[])
             self.system_prompt = """
             Analyze this call transcript for scam indicators (urgency, bank details, fear).
@@ -30,7 +32,7 @@ class GeminiScamAnalyzer(IntelligenceAnalyzer):
             """
         except Exception as e:
             logger.error("gemini_init_failed", error=str(e))
-            raise ExternalServiceError("Failed to initialize Gemini service", original_error=e)
+            raise ExternalServiceError("Failed to initialize Gemini service", original_error=e) from e
 
     async def analyze(self, text: str) -> AnalysisResult:
         try:
