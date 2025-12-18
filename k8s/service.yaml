@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: grandshield-svc
+  name: grandshield-service
 spec:
   selector:
     app: grandshield
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 8000
-  type: LoadBalancer # For production, consider using Ingress
+      port: 80           
+      targetPort: 8000   
+  type: LoadBalancer    
