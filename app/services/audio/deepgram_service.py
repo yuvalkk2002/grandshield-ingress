@@ -1,12 +1,13 @@
 import asyncio
 from typing import Awaitable, Callable, Optional
 
+from deepgram import DeepgramClient, LiveOptions, LiveTranscriptionEvents
+from deepgram.clients.live.v1 import LiveClient
+
 from app.config import settings
 from app.core.exceptions import AudioServiceError
 from app.core.logger import logger
 from app.services.audio.base import AudioStreamer
-from deepgram import DeepgramClient, LiveOptions, LiveTranscriptionEvents
-from deepgram.clients.live.v1 import LiveClient
 
 
 class DeepgramStreamer(AudioStreamer):
@@ -31,11 +32,14 @@ class DeepgramStreamer(AudioStreamer):
             # nova-2 is the fastest model for streaming
             options = LiveOptions(
                 model="nova-2", 
-                language="en-US", 
+                language="multi", 
                 smart_format=True,
                 interim_results=False, # We only want completed sentences
                 utterance_end_ms="1000",
-                vad_events=True
+                vad_events=True,
+                encoding="linear16",
+                sample_rate=16000,
+                channels=1
             )
             
             # Create a websocket connection to Deepgram
@@ -70,7 +74,7 @@ class DeepgramStreamer(AudioStreamer):
             # Clean up if partially initialized
             if self.connection:
                 await self.stop()
-            raise AudioServiceError("Failed to connect to Deepgram", original_error=e)
+            raise AudioServiceError("Failed to connect to Deepgram", original_error=e) from e
 
     async def send_audio(self, data: bytes) -> None:
         """
@@ -84,7 +88,7 @@ class DeepgramStreamer(AudioStreamer):
             await self.connection.send(data)
         except Exception as e:
             logger.error("error_sending_audio_chunk", error=str(e))
-            raise AudioServiceError("Failed to send audio data", original_error=e)
+            raise AudioServiceError("Failed to send audio data", original_error=e) from e
 
     async def stop(self) -> None:
         """
