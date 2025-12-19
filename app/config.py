@@ -20,6 +20,11 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    DEBUG: bool = False
+
+
     def load_aws_secrets(self):
         """
         Load secrets from AWS Secrets Manager if not in local environment.
@@ -43,7 +48,10 @@ class Settings(BaseSettings):
                 secrets = json.loads(resp['SecretString'])
                 self.DEEPGRAM_API_KEY = secrets.get("DEEPGRAM_API_KEY")
                 self.GOOGLE_API_KEY = secrets.get("GOOGLE_API_KEY")
-                logger.info("secrets_loaded_successfully")
+                if self.GOOGLE_API_KEY and self.GOOGLE_API_KEY:
+                    logger.info("secrets loaded successfully")
+                else:
+                    logger.info("at lease one secret not loaded.")
             else:
                 raise ConfigurationError("SecretString not found in the response")
                 

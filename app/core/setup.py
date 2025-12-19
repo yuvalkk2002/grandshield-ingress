@@ -17,7 +17,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.critical("startup_failed", error=str(e))
         # Depending on strictness, we might want to let it crash or continue
-        # raising here will crashes the app, which is good if secrets are essential
         raise e
     
     yield
@@ -31,7 +30,7 @@ def create_application() -> FastAPI:
     Create and configure the FastAPI application.
     """
     app = FastAPI(
-        title="Scam Shield Backend",
+        title="GrandShield Backend",
         description="Backend service for processing audio and detecting scams.",
         version="0.1.0",
         lifespan=lifespan

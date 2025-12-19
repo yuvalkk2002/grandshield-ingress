@@ -32,10 +32,10 @@ class DeepgramStreamer(AudioStreamer):
             # nova-2 is the fastest model for streaming
             options = LiveOptions(
                 model="nova-2", 
-                language="multi", 
+                detect_language=True,
                 smart_format=True,
                 interim_results=False, # We only want completed sentences
-                utterance_end_ms="1000",
+                utterance_end_ms=1000,
                 vad_events=True,
                 encoding="linear16",
                 sample_rate=16000,

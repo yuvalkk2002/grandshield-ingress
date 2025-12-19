@@ -12,39 +12,49 @@ def configure_logging():
     """
     
     # Define shared processors for both structlog and standard logging
-    processors = [
+    # Shared processors for both structlog and standard logging
+    # These effectively parse/enrich the log record
+    shared_processors = [
         structlog.contextvars.merge_contextvars,
-        structlog.stdlib.filter_by_level,
-        structlog.processors.TimeStamper(fmt="iso", utc=True),
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
         structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso", utc=True),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
     ]
 
+    # Processors specific to structlog (not for stdlib redirection)
+    structlog_processors = [
+        structlog.stdlib.filter_by_level,
+    ] + shared_processors + [
+        # Prepare event dict for stdlib logging
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ]
+
     # Decide on the renderer
-    # If explicitly local or internal dev, use console renderer
-    if os.getenv("ENV") == "local":
-        processors.append(structlog.dev.ConsoleRenderer())
-    else:
-        processors.append(structlog.processors.JSONRenderer())
+    renderer = (
+        structlog.dev.ConsoleRenderer() 
+        if os.getenv("ENV") == "local" 
+        else structlog.processors.JSONRenderer()
+    )
 
     structlog.configure(
-        processors=processors,
+        processors=structlog_processors,
         logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
 
     # Configure standard logging to use structlog's formatting
-    # This intercepts standard logging calls (e.g. from libraries) and formats them
     formatter = structlog.stdlib.ProcessorFormatter(
-        foreign_pre_chain=processors,
+        # Processors to run on foreign (stdlib) logs to add structure
+        foreign_pre_chain=shared_processors,
+        # Processors to run on ALL logs to render final output
         processors=[
             structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-            structlog.dev.ConsoleRenderer() if os.getenv("ENV") == "local" else structlog.processors.JSONRenderer(),
+            renderer,
         ],
     )
 

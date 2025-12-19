@@ -24,7 +24,7 @@ class GeminiScamAnalyzer(IntelligenceAnalyzer):
 
         try:
             genai.configure(api_key=settings.GOOGLE_API_KEY)
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
             self.chat = self.model.start_chat(history=[])
             self.system_prompt = """
             Analyze this call transcript for scam indicators (urgency, bank details, fear).

@@ -154,3 +154,5 @@ cython_debug/
 
 # MacOS
 .DS_Store
+deepgram_dir.txt
+deepgram_dir.txt
