@@ -13,6 +13,7 @@ dependencies = [
     "structlog",
     "python-dotenv",
     "pydantic-settings",
+    "python-multipart",
 ]
 
 [build-system]

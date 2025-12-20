@@ -1,8 +1,7 @@
-import asyncio
 from typing import Awaitable, Callable, Optional
 
 from deepgram import DeepgramClient, LiveOptions, LiveTranscriptionEvents
-from deepgram.clients.live.v1 import LiveClient
+from deepgram.clients.live.v1 import AsyncLiveClient
 
 from app.config import settings
 from app.core.exceptions import AudioServiceError
@@ -21,7 +20,7 @@ class DeepgramStreamer(AudioStreamer):
             raise AudioServiceError("Deepgram API key is missing configuration")
             
         self.client = DeepgramClient(settings.DEEPGRAM_API_KEY)
-        self.connection: Optional[LiveClient] = None
+        self.connection: Optional[AsyncLiveClient] = None
 
     async def start(self) -> bool:
         """
@@ -32,10 +31,10 @@ class DeepgramStreamer(AudioStreamer):
             # nova-2 is the fastest model for streaming
             options = LiveOptions(
                 model="nova-2", 
-                detect_language=True,
+                # detect_language=True,
                 smart_format=True,
                 interim_results=False, # We only want completed sentences
-                utterance_end_ms=1000,
+                # utterance_end_ms=1000,
                 vad_events=True,
                 encoding="linear16",
                 sample_rate=16000,
@@ -43,9 +42,9 @@ class DeepgramStreamer(AudioStreamer):
             )
             
             # Create a websocket connection to Deepgram
-            self.connection = self.client.listen.live.v("1")
+            self.connection = self.client.listen.asynclive.v("1")
 
-            def on_message(result, **kwargs):
+            async def on_message(result, **kwargs):
                 try:
                     # Safely access the transcript
                     if result.channel and result.channel.alternatives:
@@ -53,7 +52,7 @@ class DeepgramStreamer(AudioStreamer):
                         if alternatives:
                             sentence = alternatives[0].transcript
                             if sentence and len(sentence.strip()) > 0:
-                                asyncio.create_task(self.callback(sentence))
+                                await self.callback(sentence)
                 except Exception as e:
                     logger.error("error_processing_transcript_callback", error=str(e))
 
